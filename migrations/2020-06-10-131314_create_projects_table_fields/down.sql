@@ -1,0 +1,1 @@
+DROP TABLE project_table_fields;

@@ -1,0 +1,20 @@
+[package]
+name = "mockdata-backend"
+version = "0.1.0"
+authors = ["Anton Pokhylenko <anton.pokhilenko@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "0.2", features = ["full"] }
+diesel = { version = "1.4.4", features = ["postgres"] }
+warp = "0.2"
+serde = "1.0.79"
+pretty_env_logger = "0.2.4"
+serde_json = "1.0.28"
+serde_derive = "1.0.79"
+dotenv = "0.13.0"
+chrono = { version = "0.4.6", features = ["serde"] }
+log = "0.4.5"
+uuid = { version = "0.7.4", features = ["serde", "v4"] }
