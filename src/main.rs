@@ -35,9 +35,13 @@ async fn main() {
     }
     pretty_env_logger::init();
 
+    let cors = warp::cors()
+        .allow_any_origin()
+        .allow_methods(vec!["GET", "POST", "PUT", "DELETE"]);
+
     let api = filters::project::project_filters();
 
-    let routes = api.with(warp::log("projects"));
-    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
+    let routes = api.with(warp::log("projects")).with(cors);
+    warp::serve(routes).run(([0, 0, 0, 0], 8080)).await;
 }
 
