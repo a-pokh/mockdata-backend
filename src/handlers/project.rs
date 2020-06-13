@@ -6,8 +6,9 @@ use diesel::prelude::*;
 use crate::schema::*;
 use dotenv::dotenv;
 use std::env;
+use std::thread;
 use uuid::Uuid;
-use crate::services::introspect;
+use mockdata_ddl;
 
 /* 
     TODO: 
@@ -21,7 +22,7 @@ use crate::services::introspect;
 pub async fn list_projects() -> Result<impl warp::Reply, Infallible> {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let conn = PgConnection::establish(&database_url).unwrap();
+    let conn = PgConnection::establish(&database_url);
 
     let query = projects::table.load::<Project>(&conn).unwrap();
 
@@ -102,11 +103,16 @@ pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, 
         .execute(&conn)
         .expect("Error saving new project");
 
-    let tables = introspect::generate_data();
+    let processing_thread = thread::spawn(move || {
+        mockdata_ddl::get_database_structure()
+    });
+
+    let result = processing_thread.join().unwrap();
+    println!("{:#?}", result);
 
     let mut project_tables = Vec::new();
     let mut project_table_fields = Vec::new();
-    for table in tables {
+    for table in result.unwrap() {
         let table_id = Uuid::new_v4().to_string();
 
         project_tables.push(ProjectTable {

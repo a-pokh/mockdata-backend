@@ -1,0 +1,1 @@
+DROP FUNCTION public.describe_table(p_schema_name character varying, p_table_name character varying);
