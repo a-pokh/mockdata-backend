@@ -22,7 +22,7 @@ use mockdata_ddl;
 pub async fn list_projects() -> Result<impl warp::Reply, Infallible> {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let conn = PgConnection::establish(&database_url);
+    let conn = PgConnection::establish(&database_url).unwrap();
 
     let query = projects::table.load::<Project>(&conn).unwrap();
 

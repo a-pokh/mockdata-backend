@@ -1,4 +1,14 @@
 table! {
+    projects (id) {
+        id -> Text,
+        title -> Varchar,
+        description -> Nullable<Text>,
+        connection_string -> Nullable<Text>,
+        ddl_schema -> Nullable<Text>,
+    }
+}
+
+table! {
     project_table_fields (id) {
         id -> Text,
         name -> Text,
@@ -18,21 +28,11 @@ table! {
     }
 }
 
-table! {
-    projects (id) {
-        id -> Text,
-        title -> Varchar,
-        description -> Nullable<Text>,
-        connection_string -> Nullable<Text>,
-        ddl_schema -> Nullable<Text>,
-    }
-}
-
 joinable!(project_table_fields -> project_tables (project_table_id));
 joinable!(project_tables -> projects (project_id));
 
 allow_tables_to_appear_in_same_query!(
+    projects,
     project_table_fields,
     project_tables,
-    projects,
 );
