@@ -30,7 +30,7 @@ pub async fn list_projects() -> Result<impl warp::Reply, Infallible> {
 }
 
 pub async fn get_project(project_id: String) -> Result<impl warp::Reply, Infallible> {
-    use crate::schema::projects::dsl::{projects};
+    use crate::schema::projects::dsl::{projects}; 
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let conn = PgConnection::establish(&database_url).unwrap();
@@ -95,6 +95,7 @@ pub async fn get_project_tables(project_id: String) -> Result<impl warp::Reply, 
 }
 
 pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, Infallible> {
+    use crate::schema::projects::dsl::{projects};
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let conn = PgConnection::establish(&database_url).unwrap();
@@ -103,8 +104,14 @@ pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, 
         .execute(&conn)
         .expect("Error saving new project");
 
+    let project = projects
+        .find(&project_id) 
+        .get_result::<Project>(&conn)
+        .expect("Error saving new project");
+
+    let schema_name = "public";
     let processing_thread = thread::spawn(move || {
-        mockdata_ddl::get_database_structure()
+        mockdata_ddl::get_database_structure(&project.connection_string.unwrap(), &schema_name)
     });
 
     let result = processing_thread.join().unwrap();
