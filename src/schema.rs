@@ -5,6 +5,7 @@ table! {
         description -> Nullable<Text>,
         connection_string -> Nullable<Text>,
         ddl_schema -> Nullable<Text>,
+        database_type -> Text,
     }
 }
 

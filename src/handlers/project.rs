@@ -154,6 +154,7 @@ pub async fn create_project(create: NewProject) -> Result<impl warp::Reply, Infa
     let project = Project {
         title: create.title,
         description: create.description,
+        database_type: create.database_type,
         connection_string: create.connection_string,
         ddl_schema: create.ddl_schema,
         id: Uuid::new_v4().to_string(),
@@ -178,6 +179,7 @@ pub async fn update_project(
     let project = Project {
         id: String::from(&id),
         title: update.title,
+        database_type: update.database_type,
         description: update.description,
         connection_string: update.connection_string,
         ddl_schema: update.ddl_schema,
