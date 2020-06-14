@@ -1,0 +1,1 @@
+ALTER TABLE public."projects" ADD "database_schema" TEXT;

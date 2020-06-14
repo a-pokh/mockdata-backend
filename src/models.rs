@@ -10,6 +10,7 @@ pub struct Project {
     pub connection_string: Option<String>,
     pub ddl_schema: Option<String>,
     pub database_type: String,
+    pub database_schema: Option<String>,
 }
 
 #[derive(Insertable, Deserialize, Serialize)]
@@ -20,6 +21,7 @@ pub struct NewProject {
     pub connection_string: Option<String>,
     pub ddl_schema: Option<String>,
     pub database_type: String,
+    pub database_schema: Option<String>
 }
 
 #[derive(Identifiable,Insertable, Queryable, AsChangeset, Serialize, Deserialize, Associations)]

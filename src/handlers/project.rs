@@ -109,9 +109,12 @@ pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, 
         .get_result::<Project>(&conn)
         .expect("Error saving new project");
 
-    let schema_name = "public";
+    let database_type = project.database_type;
+    let schema_name = project.database_schema.unwrap();
+    let connection_string = project.connection_string.unwrap();
+
     let processing_thread = thread::spawn(move || {
-        mockdata_ddl::get_database_structure(&project.connection_string.unwrap(), &schema_name)
+        mockdata_ddl::get_database_structure(&database_type, &connection_string, &schema_name)
     });
 
     let result = processing_thread.join().unwrap();
@@ -165,6 +168,7 @@ pub async fn create_project(create: NewProject) -> Result<impl warp::Reply, Infa
         connection_string: create.connection_string,
         ddl_schema: create.ddl_schema,
         id: Uuid::new_v4().to_string(),
+        database_schema: create.database_schema
     };
 
     let project: Project = diesel::insert_into(projects::table)
@@ -190,6 +194,7 @@ pub async fn update_project(
         description: update.description,
         connection_string: update.connection_string,
         ddl_schema: update.ddl_schema,
+        database_schema: update.database_schema,
     };
 
     let project: Project = diesel::update(projects::table.find(&id))
