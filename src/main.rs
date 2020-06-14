@@ -1,6 +1,7 @@
 #![deny(warnings)]
 
 use std::env;
+use std::net::Ipv4Addr;
 use warp::Filter;
 
 pub mod schema;
@@ -30,6 +31,11 @@ pub fn establish_connection() -> PgConnection {
 
 #[tokio::main]
 async fn main() {
+    dotenv().ok();
+
+    let host = env::var("HOST").expect("Host must be set");
+    let port = env::var("PORT").expect("Port must be set");
+    
     if env::var_os("RUST_LOG").is_none() {
         env::set_var("RUST_LOG", "projects=info");
     }
@@ -42,6 +48,7 @@ async fn main() {
     let api = filters::project::project_filters();
 
     let routes = api.with(warp::log("projects")).with(cors);
-    warp::serve(routes).run(([0, 0, 0, 0], 8080)).await;
+
+    warp::serve(routes).run((String::from(&host).parse::<Ipv4Addr>().unwrap(), port.parse::<u16>().unwrap())).await;
 }
 
