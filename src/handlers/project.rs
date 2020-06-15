@@ -9,6 +9,7 @@ use std::env;
 use std::thread;
 use uuid::Uuid;
 use mockdata_ddl;
+use fakedata;
 
 /* 
     TODO: 
@@ -117,12 +118,11 @@ pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, 
         mockdata_ddl::get_database_structure(&database_type, &connection_string, &schema_name)
     });
 
-    let result = processing_thread.join().unwrap();
-    println!("{:#?}", result);
+    let database_parsed_ddl = processing_thread.join().unwrap();
 
     let mut project_tables = Vec::new();
     let mut project_table_fields = Vec::new();
-    for table in result.unwrap() {
+    for table in database_parsed_ddl.unwrap() {
         let table_id = Uuid::new_v4().to_string();
 
         project_tables.push(ProjectTable {
@@ -133,13 +133,15 @@ pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, 
         });
         
         for field in table.fields {
+            let fake_data_type = fakedata::get_data_type_by_name(&field.name, &field.data_type);
+
             project_table_fields.push(ProjectTableField {
                 id: Uuid::new_v4().to_string(),
                 project_table_id: table_id.clone(),
                 name: field.name,
                 data_type: field.data_type,
                 reference_table: Some(field.reference_table),
-                fake_data_type: Some(field.fake_data_type)
+                fake_data_type: Some(fake_data_type),
             });
         }
     }

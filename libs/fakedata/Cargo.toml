@@ -1,0 +1,13 @@
+[package]
+name = "fakedata"
+version = "0.1.0"
+authors = ["Anton Pokhylenko <anton.pokhilenko@gmail.com>"]
+edition = "2018"
+
+[lib]
+name = "fakedata"
+path = "src/lib.rs"
+
+[dependencies]
+serde_json = "1.0"
+anyhow = "1.0.31"

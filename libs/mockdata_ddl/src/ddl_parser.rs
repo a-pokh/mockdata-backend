@@ -8,7 +8,6 @@ use anyhow::Result;
 pub struct Field {
     pub name: String,
     pub data_type: String,
-    pub fake_data_type: String,
     pub reference_table: String
 }
 
@@ -44,7 +43,6 @@ pub fn parse(database_definitions: String) -> Result<Vec<Table>>  {
                         name: column.name.to_string(),
                         data_type: column.data_type.to_string(),
                         reference_table: reference_table.to_string().replace("\"", ""),
-                        fake_data_type: String::from("")
                     };
 
                     fields.push(field);

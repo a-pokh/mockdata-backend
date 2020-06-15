@@ -8,6 +8,8 @@ edition = "2018"
 
 [dependencies.mockdata_ddl]
 path = "libs/mockdata_ddl"
+[dependencies.fakedata]
+path = "libs/fakedata"
 
 [dependencies]
 tokio = { version = "0.2", features = ["full"] }
