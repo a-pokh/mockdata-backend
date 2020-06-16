@@ -79,6 +79,9 @@ pub async fn get_project_tables(project_id: String) -> Result<impl warp::Reply, 
                 data_type: f.data_type.clone(),
                 fake_data_type: f.fake_data_type.clone(),
                 reference_table: f.reference_table.clone(),
+                is_not_null: f.is_not_null.clone(),
+                is_primary_key: f.is_primary_key.clone(),
+                is_unique: f.is_unique.clone(),
             }
         }).collect();
 
@@ -141,6 +144,9 @@ pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, 
                 name: field.name,
                 data_type: field.data_type,
                 reference_table: Some(field.reference_table),
+                is_not_null: field.is_not_null,
+                is_primary_key: field.is_primary_key,
+                is_unique: field.is_unique,
                 fake_data_type: Some(fake_data_type),
             });
         }

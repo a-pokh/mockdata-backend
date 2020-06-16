@@ -42,6 +42,9 @@ pub struct ProjectTableField {
     pub reference_table: Option<String>,
     pub fake_data_type: Option<String>,
     pub project_table_id: String,
+    pub is_not_null: bool,
+    pub is_primary_key: bool,
+    pub is_unique: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -51,6 +54,9 @@ pub struct ProjectTableFieldView {
     pub data_type: String,
     pub fake_data_type: Option<String>,
     pub reference_table: Option<String>,
+    pub is_not_null: bool,
+    pub is_primary_key: bool,
+    pub is_unique: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

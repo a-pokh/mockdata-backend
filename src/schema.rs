@@ -18,6 +18,9 @@ table! {
         reference_table -> Nullable<Text>,
         fake_data_type -> Nullable<Text>,
         project_table_id -> Text,
+        is_not_null -> Bool,
+        is_primary_key -> Bool,
+        is_unique -> Bool,
     }
 }
 
