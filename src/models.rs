@@ -1,6 +1,6 @@
-use serde_derive::{Deserialize, Serialize};
+use crate::schema::{project_table_fields, project_tables, projects};
 use diesel::{Insertable, Queryable};
-use crate::schema::{projects, project_tables, project_table_fields};
+use serde_derive::{Deserialize, Serialize};
 
 #[derive(Identifiable, Insertable, Queryable, AsChangeset, Serialize, Deserialize)]
 pub struct Project {
@@ -14,17 +14,17 @@ pub struct Project {
 }
 
 #[derive(Insertable, Deserialize, Serialize)]
-#[table_name="projects"]
+#[table_name = "projects"]
 pub struct NewProject {
     pub title: String,
     pub description: Option<String>,
     pub connection_string: Option<String>,
     pub ddl_schema: Option<String>,
     pub database_type: String,
-    pub database_schema: Option<String>
+    pub database_schema: Option<String>,
 }
 
-#[derive(Identifiable,Insertable, Queryable, AsChangeset, Serialize, Deserialize, Associations)]
+#[derive(Identifiable, Insertable, Queryable, AsChangeset, Serialize, Deserialize, Associations)]
 #[belongs_to(Project)]
 pub struct ProjectTable {
     pub id: String,
@@ -45,6 +45,7 @@ pub struct ProjectTableField {
     pub is_not_null: bool,
     pub is_primary_key: bool,
     pub is_unique: bool,
+    pub enum_values: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -57,6 +58,7 @@ pub struct ProjectTableFieldView {
     pub is_not_null: bool,
     pub is_primary_key: bool,
     pub is_unique: bool,
+    pub enum_values: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -64,5 +66,5 @@ pub struct ProjectTableView {
     pub id: String,
     pub name: String,
     pub schema: String,
-    pub fields: Vec<ProjectTableFieldView>
+    pub fields: Vec<ProjectTableFieldView>,
 }

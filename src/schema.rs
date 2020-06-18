@@ -21,6 +21,7 @@ table! {
         is_not_null -> Bool,
         is_primary_key -> Bool,
         is_unique -> Bool,
+        enum_values -> Nullable<Text>,
     }
 }
 

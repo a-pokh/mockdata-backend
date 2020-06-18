@@ -1,23 +1,25 @@
-use std::convert::Infallible;
-use warp::http::StatusCode;
-use crate::models::{Project, NewProject, ProjectTable, ProjectTableField, ProjectTableView, ProjectTableFieldView};
+use crate::models::{
+    NewProject, Project, ProjectTable, ProjectTableField, ProjectTableFieldView, ProjectTableView,
+};
+use crate::schema::*;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-use crate::schema::*;
 use dotenv::dotenv;
+use fakedata;
+use mockdata_ddl;
+use std::convert::Infallible;
 use std::env;
 use std::thread;
 use uuid::Uuid;
-use mockdata_ddl;
-use fakedata;
+use warp::http::StatusCode;
 
-/* 
-    TODO: 
-        error handling, 
-        move connection creation outside handlers, 
-        consider repository pattern,
-        consider r2d2 pools,
-        ...
+/*
+TODO:
+error handling,
+move connection creation outside handlers,
+consider repository pattern,
+consider r2d2 pools,
+...
 */
 
 pub async fn list_projects() -> Result<impl warp::Reply, Infallible> {
@@ -31,13 +33,13 @@ pub async fn list_projects() -> Result<impl warp::Reply, Infallible> {
 }
 
 pub async fn get_project(project_id: String) -> Result<impl warp::Reply, Infallible> {
-    use crate::schema::projects::dsl::{projects}; 
+    use crate::schema::projects::dsl::projects;
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let conn = PgConnection::establish(&database_url).unwrap();
 
     let project = projects
-        .find(project_id) 
+        .find(project_id)
         .get_result::<Project>(&conn)
         .expect("Error saving new project");
 
@@ -45,13 +47,13 @@ pub async fn get_project(project_id: String) -> Result<impl warp::Reply, Infalli
 }
 
 pub async fn get_project_tables(project_id: String) -> Result<impl warp::Reply, Infallible> {
-    use crate::schema::projects::dsl::{projects};
+    use crate::schema::projects::dsl::projects;
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let conn = PgConnection::establish(&database_url).unwrap();
 
     let project = projects
-        .find(project_id) 
+        .find(project_id)
         .get_result::<Project>(&conn)
         .expect("Error saving new project");
     let project_tables = ProjectTable::belonging_to(&project)
@@ -61,19 +63,18 @@ pub async fn get_project_tables(project_id: String) -> Result<impl warp::Reply, 
         .load::<ProjectTableField>(&conn)
         .expect("Error saving new project");
 
-    let grouped_fields: Vec<Vec<ProjectTableField>> = project_table_fields
-        .grouped_by(&project_tables);
-    let tables_and_fields: Vec<(ProjectTable, Vec<ProjectTableField>)> = project_tables
-        .into_iter()
-        .zip(grouped_fields)
-        .collect();
+    let grouped_fields: Vec<Vec<ProjectTableField>> =
+        project_table_fields.grouped_by(&project_tables);
+    let tables_and_fields: Vec<(ProjectTable, Vec<ProjectTableField>)> =
+        project_tables.into_iter().zip(grouped_fields).collect();
 
     let mut result = Vec::new();
     for table_and_fields in tables_and_fields {
         let (project_table, fields) = table_and_fields;
 
-        let fields_views: Vec<ProjectTableFieldView> = fields.into_iter().map(|f| {
-            ProjectTableFieldView {
+        let fields_views: Vec<ProjectTableFieldView> = fields
+            .into_iter()
+            .map(|f| ProjectTableFieldView {
                 id: f.id.clone(),
                 name: f.name.clone(),
                 data_type: f.data_type.clone(),
@@ -82,14 +83,15 @@ pub async fn get_project_tables(project_id: String) -> Result<impl warp::Reply, 
                 is_not_null: f.is_not_null.clone(),
                 is_primary_key: f.is_primary_key.clone(),
                 is_unique: f.is_unique.clone(),
-            }
-        }).collect();
+                enum_values: f.enum_values.clone(),
+            })
+            .collect();
 
         let table_view = ProjectTableView {
             id: project_table.id.clone(),
             name: project_table.name.clone(),
             schema: project_table.schema.clone(),
-            fields: fields_views
+            fields: fields_views,
         };
 
         result.push(table_view);
@@ -99,7 +101,7 @@ pub async fn get_project_tables(project_id: String) -> Result<impl warp::Reply, 
 }
 
 pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, Infallible> {
-    use crate::schema::projects::dsl::{projects};
+    use crate::schema::projects::dsl::projects;
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let conn = PgConnection::establish(&database_url).unwrap();
@@ -109,7 +111,7 @@ pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, 
         .expect("Error saving new project");
 
     let project = projects
-        .find(&project_id) 
+        .find(&project_id)
         .get_result::<Project>(&conn)
         .expect("Error saving new project");
 
@@ -134,20 +136,22 @@ pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, 
             name: table.name,
             schema: table.schema,
         });
-        
+
         for field in table.fields {
             let fake_data_type = fakedata::get_data_type_by_name(&field.name, &field.data_type);
+            let enum_values = field.enum_values.map(|e| e.join(","));
 
             project_table_fields.push(ProjectTableField {
                 id: Uuid::new_v4().to_string(),
                 project_table_id: table_id.clone(),
                 name: field.name,
                 data_type: field.data_type,
-                reference_table: Some(field.reference_table),
+                reference_table: field.reference_table,
                 is_not_null: field.is_not_null,
                 is_primary_key: field.is_primary_key,
                 is_unique: field.is_unique,
                 fake_data_type: Some(fake_data_type),
+                enum_values,
             });
         }
     }
@@ -176,7 +180,7 @@ pub async fn create_project(create: NewProject) -> Result<impl warp::Reply, Infa
         connection_string: create.connection_string,
         ddl_schema: create.ddl_schema,
         id: Uuid::new_v4().to_string(),
-        database_schema: create.database_schema
+        database_schema: create.database_schema,
     };
 
     let project: Project = diesel::insert_into(projects::table)
@@ -189,7 +193,7 @@ pub async fn create_project(create: NewProject) -> Result<impl warp::Reply, Infa
 
 pub async fn update_project(
     id: String,
-    update: NewProject
+    update: NewProject,
 ) -> Result<impl warp::Reply, Infallible> {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
