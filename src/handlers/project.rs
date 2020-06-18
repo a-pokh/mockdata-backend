@@ -19,6 +19,7 @@ error handling,
 move connection creation outside handlers,
 consider repository pattern,
 consider r2d2 pools,
+another comment
 ...
 */
 
