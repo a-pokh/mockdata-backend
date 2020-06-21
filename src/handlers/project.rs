@@ -93,6 +93,7 @@ pub async fn get_project_tables(project_id: String) -> Result<impl warp::Reply, 
             name: project_table.name.clone(),
             schema: project_table.schema.clone(),
             fields: fields_views,
+            generate_data_count: project_table.generate_data_count,
         };
 
         result.push(table_view);
@@ -136,6 +137,8 @@ pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, 
             project_id: project_id.clone(),
             name: table.name,
             schema: table.schema,
+            // this is default value in DB, not sure how to skip its insertion
+            generate_data_count: 100,
         });
 
         for field in table.fields {
@@ -151,7 +154,7 @@ pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, 
                 is_not_null: field.is_not_null,
                 is_primary_key: field.is_primary_key,
                 is_unique: field.is_unique,
-                fake_data_type: Some(fake_data_type),
+                fake_data_type,
                 enum_values,
             });
         }
@@ -165,6 +168,12 @@ pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, 
         .values(&project_table_fields)
         .execute(&conn)
         .expect("Error saving new project");
+
+    Ok(StatusCode::OK)
+}
+
+pub async fn generate_project_data(_project_id: String) -> Result<impl warp::Reply, Infallible> {
+    fakedata::generate_data();
 
     Ok(StatusCode::OK)
 }

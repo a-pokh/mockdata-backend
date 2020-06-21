@@ -43,7 +43,7 @@ pub fn parse(
             } => {
                 let mut fields = Vec::new();
                 for column in columns {
-                    let mut reference_table: Option<String>;
+                    let reference_table: Option<String>;
                     let mut is_not_null = false;
                     let mut is_primary_key = false;
                     let mut is_unique = false;

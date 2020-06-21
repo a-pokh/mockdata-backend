@@ -31,6 +31,7 @@ table! {
         name -> Varchar,
         schema -> Varchar,
         project_id -> Text,
+        generate_data_count -> Int4,
     }
 }
 

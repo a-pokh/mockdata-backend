@@ -31,6 +31,7 @@ pub struct ProjectTable {
     pub name: String,
     pub schema: String,
     pub project_id: String,
+    pub generate_data_count: i32,
 }
 
 #[derive(Identifiable, Insertable, Queryable, AsChangeset, Serialize, Deserialize, Associations)]
@@ -67,4 +68,5 @@ pub struct ProjectTableView {
     pub name: String,
     pub schema: String,
     pub fields: Vec<ProjectTableFieldView>,
+    pub generate_data_count: i32,
 }

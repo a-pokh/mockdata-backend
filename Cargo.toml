@@ -13,7 +13,7 @@ path = "libs/fakedata"
 
 [dependencies]
 tokio = { version = "0.2", features = ["full"] }
-diesel = { version = "1.4.4", features = ["postgres"] }
+diesel = { version = "1.4.4", features = ["postgres", "numeric"] }
 warp = "0.2"
 serde = "1.0.79"
 pretty_env_logger = "0.2.4"
