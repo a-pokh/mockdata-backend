@@ -311,6 +311,8 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "fake",
+ "rand 0.7.3",
+ "regex",
  "serde_json",
 ]
 
@@ -830,6 +832,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "postgres",
+ "regex",
  "serde_json",
  "sqlparser",
 ]
@@ -1477,9 +1480,9 @@ dependencies = [
 
 [[package]]
 name = "sqlparser"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e7ac1f0f284146472a721eb7b5cb4615e314c781f5f7be41d27aa98d9e0a1ff9"
+checksum = "282582bbdc83341c48575fad4906bc1fcc317f042c98bbb5abc270c972f4c2b8"
 dependencies = [
  "log 0.4.8",
 ]

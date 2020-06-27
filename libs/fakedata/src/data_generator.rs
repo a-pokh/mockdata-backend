@@ -1,8 +1,11 @@
 use anyhow::Result;
+use fake::faker::lorem::en::*;
 use fake::faker::number::raw::*;
 use fake::locales::*;
 use fake::locales::{EN, ZH_TW};
-use fake::Fake;
+use fake::{Dummy, Fake, Faker};
+use rand::rngs::StdRng;
+use rand::SeedableRng;
 
 pub struct Table {
     pub name: String,
@@ -22,14 +25,16 @@ pub struct Field {
 }
 
 pub fn generate() -> Vec<String> {
-    let val: String = Digit(EN).fake();
-    println!("{:?}", val);
-
-    // ^: 1-9, #: 0-9
-    let val: String = NumberWithFormat(EN, "^###").fake();
-    println!("{:?}", val);
-
-    let val: String = NumberWithFormat(EN, "FLAT 0# ^#/F").fake();
-    println!("{:?}", val);
-    vec!["a".to_string()]
+    let mut result = Vec::new();
+    let seed = [
+        1, 0, 0, 0, 23, 0, 0, 0, 200, 1, 0, 0, 210, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0,
+    ];
+    let ref mut rng = StdRng::from_seed(seed);
+    for _ in 0..1000 {
+        let v: String = Word().fake_with_rng::<String, StdRng>(rng);
+        result.push(v);
+    }
+    println!("random nested vec {:?}", result);
+    vec![]
 }

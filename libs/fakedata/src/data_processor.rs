@@ -1,3 +1,5 @@
+use regex::Regex;
+
 const LOREM_WORDS: &str = "words";
 const LOREM_WORD: &str = "word";
 const NAME_NAME: &str = "name";
@@ -5,11 +7,198 @@ const NAME_FIRST_NAME: &str = "first_name";
 const NAME_LAST_NAME: &str = "last_name";
 const NAME_TITLE: &str = "title";
 const INTERNET_EMAIL: &str = "email";
+const NUMBER_INTEGER: &str = "integer";
+const NUMBER_FLOAT: &str = "float";
+const DATE_DATE: &str = "date";
+const DATE_TIMESTAMP: &str = "timestamp";
+const DATE_TIMESTAMP_WITH_TIMEZONE: &str = "timestamp_with_timezone";
+const DATE_TIME: &str = "time";
+const DATE_TIME_WITH_TIMEZONE: &str = "time_with_timezone";
+const DATE_INTERVAL: &str = "interval";
 
 #[derive(Debug)]
 pub struct FakeDataType {
     name: String,
     category_name: String,
+}
+
+#[derive(Debug)]
+struct TextType {
+    length: Option<u8>,
+    varying: bool,
+}
+#[derive(Debug)]
+struct NumericType {
+    is_floating: bool,
+}
+
+pub fn get_data_type_by_name(
+    name: &str,
+    data_type: &str,
+    is_primary_key: bool,
+    is_table_has_composite_pk: bool,
+    is_reference: bool,
+    is_enum: bool,
+    is_unique: bool,
+) -> Option<String> {
+    let mut retval_str: &str = "";
+
+    // text
+    if get_text_type(data_type).is_some() {
+        if check_if_email(name, data_type) {
+            retval_str = INTERNET_EMAIL;
+        } else if check_if_first_name(name, data_type) {
+            retval_str = NAME_FIRST_NAME;
+        } else if check_if_last_name(name, data_type) {
+            retval_str = NAME_LAST_NAME;
+        } else if check_if_name(name, data_type) {
+            retval_str = NAME_NAME;
+        } else {
+            retval_str = LOREM_WORD;
+        }
+    }
+    // number
+    match get_numeric_type(data_type) {
+        Some(numeric_type) => {
+            if numeric_type.is_floating {
+                retval_str = NUMBER_FLOAT;
+            } else {
+                retval_str = NUMBER_INTEGER;
+            }
+        }
+        _ => {}
+    }
+    // date
+    if let Some(date_type) = get_date_type(data_type) {
+        retval_str = date_type;
+    }
+
+    if retval_str.is_empty() {
+        return None;
+    } else {
+        return Some(String::from(retval_str));
+    }
+}
+
+fn check_if_id(is_primary_key: bool) -> bool {
+    return is_primary_key;
+}
+
+fn check_if_email(name: &str, data_type: &str) -> bool {
+    name.to_lowercase().contains("email")
+        || name.to_lowercase().contains("e-mail")
+        || name.to_lowercase().contains("e_mail")
+}
+
+fn check_if_first_name(name: &str, data_type: &str) -> bool {
+    name.to_lowercase().contains("first") && name.to_lowercase().contains("name")
+}
+
+fn check_if_last_name(name: &str, data_type: &str) -> bool {
+    name.to_lowercase().contains("last") && name.to_lowercase().contains("name")
+}
+
+fn check_if_name(name: &str, data_type: &str) -> bool {
+    name.to_lowercase().contains("name")
+}
+
+fn get_date_type(data_type: &str) -> Option<&str> {
+    if data_type.to_lowercase().contains("timestamp")
+        && data_type.to_lowercase().contains("without time zone")
+    {
+        return Some(DATE_TIMESTAMP);
+    } else if (data_type.to_lowercase().contains("timestamp")
+        && data_type.to_lowercase().contains("with time zone"))
+        || data_type.to_lowercase().contains("timestamptz")
+    {
+        return Some(DATE_TIMESTAMP_WITH_TIMEZONE);
+    } else if data_type.to_lowercase().contains("timestamp") {
+        return Some(DATE_TIMESTAMP);
+    }
+    if data_type.to_lowercase().contains("time")
+        && data_type.to_lowercase().contains("without time zone")
+    {
+        return Some(DATE_TIME);
+    } else if (data_type.to_lowercase().contains("time")
+        && data_type.to_lowercase().contains("with time zone"))
+        || data_type.to_lowercase().contains("timetz")
+    {
+        return Some(DATE_TIME_WITH_TIMEZONE);
+    } else if data_type.to_lowercase().contains("time") {
+        return Some(DATE_TIME);
+    }
+    if data_type.to_lowercase() == "date" {
+        return Some(DATE_DATE);
+    }
+
+    None
+}
+
+fn get_text_type(data_type: &str) -> Option<TextType> {
+    // compile outside loop
+    let varchar_regex = Regex::new(r"varchar\((\d+)\)|character varying\((\d+)\)").unwrap();
+    let char_regex = Regex::new(r"char\((\d+)\)|character\((\d+)\)").unwrap();
+
+    let varchar_match = varchar_regex.captures(data_type);
+    let char_match = char_regex.captures(data_type);
+    if data_type.to_lowercase() == "text" {
+        return Some(TextType {
+            length: None,
+            varying: true,
+        });
+    }
+    match varchar_match {
+        Some(varchar_capture) => {
+            let mut length: Option<u8> = None;
+            if let Some(i) = varchar_capture.get(1) {
+                length = Some(i.as_str().parse().unwrap());
+            }
+            if let Some(i) = varchar_capture.get(2) {
+                length = Some(i.as_str().parse().unwrap());
+            }
+            return Some(TextType {
+                length,
+                varying: true,
+            });
+        }
+        _ => {}
+    }
+    match char_match {
+        Some(char_capture) => {
+            let mut length: Option<u8> = None;
+            if let Some(i) = char_capture.get(1) {
+                length = Some(i.as_str().parse().unwrap());
+            }
+            if let Some(i) = char_capture.get(2) {
+                length = Some(i.as_str().parse().unwrap());
+            }
+            return Some(TextType {
+                length,
+                varying: false,
+            });
+        }
+        _ => {}
+    }
+
+    None
+}
+
+fn get_numeric_type(data_type: &str) -> Option<NumericType> {
+    let int_types_vector = vec![
+        "smallint", "int2", "integer", "int", "int4", "int8", "bigint",
+    ];
+    let float_types_vector = vec!["real", "float4", "double precision", "float8"];
+
+    if int_types_vector.iter().any(|&i| i == data_type) {
+        return Some(NumericType { is_floating: false });
+    }
+
+    let float_var_regex = Regex::new(r"decimal\((\d+, ?\d+)\)|numeric\((\d+, ?\d+)\)").unwrap();
+    if float_types_vector.iter().any(|&i| i == data_type) || float_var_regex.is_match(data_type) {
+        return Some(NumericType { is_floating: true });
+    }
+
+    None
 }
 
 pub fn _get_data_types() -> Vec<FakeDataType> {
@@ -115,42 +304,60 @@ pub fn _get_data_types() -> Vec<FakeDataType> {
     data_types
 }
 
-pub fn get_data_type_by_name(name: &str, data_type: &str) -> Option<String> {
-    let mut retval_str: &str = "";
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    if check_if_email(name, data_type) {
-        retval_str = INTERNET_EMAIL;
-    } else if check_if_first_name(name, data_type) {
-        retval_str = NAME_FIRST_NAME;
-    } else if check_if_last_name(name, data_type) {
-        retval_str = NAME_LAST_NAME;
-    } else if check_if_name(name, data_type) {
-        retval_str = NAME_NAME;
+    #[test]
+    fn get_text_returns_varying_char_with_length() {
+        let result = get_text_type("varchar(20)").unwrap();
+
+        assert_eq!(result.length.unwrap(), 20);
+        assert_eq!(result.varying, true);
+    }
+    #[test]
+    fn get_text_returns_char_with_length() {
+        let result = get_text_type("char(10)").unwrap();
+
+        assert_eq!(result.length.unwrap(), 10);
+        assert_eq!(result.varying, false);
+    }
+    #[test]
+    fn get_text_returns_text() {
+        let result = get_text_type("text").unwrap();
+
+        assert_eq!(result.length, None);
+        assert_eq!(result.varying, true);
+    }
+    #[test]
+    fn get_text_returns_none() {
+        let result = get_text_type("numeric");
+
+        assert!(result.is_none());
+    }
+    #[test]
+    fn get_numeric_returns_number_integer() {
+        let result = get_numeric_type("smallint").unwrap();
+
+        assert_eq!(result.is_floating, false);
+    }
+    #[test]
+    fn get_numeric_returns_number_float() {
+        let result = get_numeric_type("real").unwrap();
+
+        assert_eq!(result.is_floating, true);
     }
 
-    if retval_str.is_empty() {
-        return None;
-    } else {
-        return Some(String::from(retval_str));
+    #[test]
+    fn get_numeric_returns_number_float_var() {
+        let result = get_numeric_type("numeric(2, 2)").unwrap();
+
+        assert_eq!(result.is_floating, true);
+    }
+    #[test]
+    fn get_numeric_returns_none() {
+        let result = get_numeric_type("text");
+
+        assert!(result.is_none());
     }
 }
-
-fn check_if_email(name: &str, data_type: &str) -> bool {
-    name.to_lowercase().contains("email")
-        || name.to_lowercase().contains("e-mail")
-        || name.to_lowercase().contains("e_mail")
-}
-
-fn check_if_first_name(name: &str, data_type: &str) -> bool {
-    name.to_lowercase().contains("first") && name.to_lowercase().contains("name")
-}
-
-fn check_if_last_name(name: &str, data_type: &str) -> bool {
-    name.to_lowercase().contains("last") && name.to_lowercase().contains("name")
-}
-
-fn check_if_name(name: &str, data_type: &str) -> bool {
-    name.to_lowercase().contains("name")
-}
-
-fn check_if_text(data_type: &str) {}

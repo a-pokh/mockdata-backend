@@ -1,5 +1,6 @@
 use crate::postgres_enums::DatabaseEnum;
 use anyhow::Result;
+use regex::Regex;
 use sqlparser::ast::ColumnOption;
 use sqlparser::ast::Statement;
 use sqlparser::ast::TableConstraint;
@@ -29,12 +30,13 @@ pub fn parse(
     database_enums: &Vec<DatabaseEnum>,
 ) -> Result<Vec<Table>> {
     let mut tables = Vec::new();
+    let re = Regex::new(r#"""#).unwrap();
 
     let dialect = PostgreSqlDialect {};
-    let ast = Parser::parse_sql(&dialect, database_definitions)?;
+    let ast = Parser::parse_sql(&dialect, &database_definitions)?;
 
-    for table in ast {
-        match table {
+    for table in &ast {
+        match &table {
             Statement::CreateTable {
                 name,
                 columns,
@@ -55,7 +57,7 @@ pub fn parse(
                             ..
                         } if columns
                             .iter()
-                            .any(|i| &i.replace("\"", "") == &column.name.to_string()) =>
+                            .any(|i| &i.value.replace("\"", "") == &column.name.to_string()) =>
                         {
                             Some(foreign_table.to_string())
                         }
@@ -72,7 +74,7 @@ pub fn parse(
                             ..
                         } if columns
                             .iter()
-                            .any(|i| &i.replace("\"", "") == &column.name.to_string())
+                            .any(|i| &i.value.replace("\"", "") == &column.name.to_string())
                             && *is_primary =>
                         {
                             Some(true)
@@ -81,9 +83,9 @@ pub fn parse(
                     });
                     let is_unique_option = constraints.iter().find_map(|d| match d {
                         TableConstraint::Unique { columns, .. }
-                            if columns
-                                .iter()
-                                .any(|i| &i.replace("\"", "") == &column.name.to_string()) =>
+                            if columns.iter().any(|i| {
+                                &i.value.replace("\"", "") == &column.name.to_string()
+                            }) =>
                         {
                             Some(true)
                         }
@@ -133,7 +135,34 @@ pub fn parse(
 
                 tables.push(table);
             }
-            _ => println!("Something else"),
+            _ => {}
+        }
+    }
+    for table in &ast {
+        match &table {
+            Statement::CreateIndex {
+                table_name,
+                columns,
+                unique,
+                ..
+            } => {
+                let table_name = &table_name.to_string();
+                let table_name_a = re.replace_all(table_name, "");
+                if *unique {
+                    let table = tables
+                        .iter_mut()
+                        .find(|t| t.name.trim().eq_ignore_ascii_case(&table_name_a.trim()));
+                    if let Some(table) = table {
+                        for field in &mut table.fields {
+                            let exist = columns.iter().any(|c| c.value.to_string() == field.name);
+                            if exist {
+                                field.is_unique = true;
+                            }
+                        }
+                    }
+                }
+            }
+            _ => {}
         }
     }
 
