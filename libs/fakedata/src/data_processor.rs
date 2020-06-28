@@ -20,6 +20,11 @@ const ID_UUID: &str = "uuid";
 const ID_SHORT_UUID: &str = "short_uuid";
 const ID_CUID: &str = "cuid";
 const ID_AUTOINCREMENT: &str = "autoincrement";
+const MONEY_MONEY: &str = "money";
+const BOOLEAN_BOOLEAN: &str = "boolean";
+const NETWORK_IPV4: &str = "ipv4";
+const NETWORK_IPV6: &str = "ipv6";
+const NETWORK_MAC: &str = "mac_address";
 
 #[derive(Debug)]
 pub struct FakeDataType {
@@ -37,7 +42,7 @@ struct NumericType {
     is_floating: bool,
 }
 
-pub fn get_data_type_by_name(
+pub fn get_data_type(
     name: &str,
     data_type: &str,
     is_primary_key: bool,
@@ -50,6 +55,25 @@ pub fn get_data_type_by_name(
     if is_enum {
         return Some(String::from(data_type));
     }
+
+    // money
+    if data_type.to_lowercase().contains("money") {
+        return Some(String::from(MONEY_MONEY));
+    }
+
+    // network
+    if data_type.to_lowercase().contains("cidr") || data_type.to_lowercase().contains("inet") {
+        return Some(String::from(NETWORK_IPV4));
+    }
+    if data_type.to_lowercase().contains("macaddr") {
+        return Some(String::from(NETWORK_MAC));
+    }
+
+    // boolean
+    if data_type.to_lowercase().contains("boolean") {
+        return Some(String::from(BOOLEAN_BOOLEAN));
+    }
+
     let text_type = get_text_type(data_type);
 
     // id

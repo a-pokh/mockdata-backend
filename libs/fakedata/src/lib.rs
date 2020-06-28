@@ -1,7 +1,7 @@
 mod data_generator;
 mod data_processor;
 
-pub fn get_data_type_by_name(
+pub fn get_data_type(
     name: &str,
     data_type: &str,
     is_primary_key: bool,
@@ -10,7 +10,7 @@ pub fn get_data_type_by_name(
     is_enum: bool,
     is_unique: bool,
 ) -> Option<String> {
-    data_processor::get_data_type_by_name(
+    data_processor::get_data_type(
         name,
         data_type,
         is_primary_key,

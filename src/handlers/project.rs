@@ -143,7 +143,7 @@ pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, 
 
         for field in &table.fields {
             let enum_values = field.enum_values.as_ref().map(|e| e.join(","));
-            let fake_data_type = fakedata::get_data_type_by_name(
+            let fake_data_type = fakedata::get_data_type(
                 &field.name,
                 &field.data_type,
                 *&field.is_primary_key,
