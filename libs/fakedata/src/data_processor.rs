@@ -15,6 +15,11 @@ const DATE_TIMESTAMP_WITH_TIMEZONE: &str = "timestamp_with_timezone";
 const DATE_TIME: &str = "time";
 const DATE_TIME_WITH_TIMEZONE: &str = "time_with_timezone";
 const DATE_INTERVAL: &str = "interval";
+const ID_GUID: &str = "guid";
+const ID_UUID: &str = "uuid";
+const ID_SHORT_UUID: &str = "short_uuid";
+const ID_CUID: &str = "cuid";
+const ID_AUTOINCREMENT: &str = "autoincrement";
 
 #[derive(Debug)]
 pub struct FakeDataType {
@@ -41,43 +46,72 @@ pub fn get_data_type_by_name(
     is_enum: bool,
     is_unique: bool,
 ) -> Option<String> {
-    let mut retval_str: &str = "";
+    // enum
+    if is_enum {
+        return Some(String::from(data_type));
+    }
+    let text_type = get_text_type(data_type);
+
+    // id
+    if is_primary_key && !is_table_has_composite_pk {
+        match &text_type {
+            Some(text_type) => {
+                match text_type.length {
+                    Some(length) => {
+                        if length < 20 {
+                            return Some(String::from(ID_SHORT_UUID));
+                        } else if length < 30 {
+                            return Some(String::from(ID_CUID));
+                        } else {
+                            return Some(String::from(ID_GUID));
+                        }
+                    }
+                    None => {
+                        return Some(String::from(ID_GUID));
+                    }
+                };
+            }
+            _ => {}
+        }
+
+        if data_type.to_lowercase().contains("uuid") {
+            return Some(String::from(ID_UUID));
+        } else {
+            return Some(String::from(ID_AUTOINCREMENT));
+        }
+    }
 
     // text
-    if get_text_type(data_type).is_some() {
+    if *&text_type.is_some() {
         if check_if_email(name, data_type) {
-            retval_str = INTERNET_EMAIL;
+            return Some(String::from(INTERNET_EMAIL));
         } else if check_if_first_name(name, data_type) {
-            retval_str = NAME_FIRST_NAME;
+            return Some(String::from(NAME_FIRST_NAME));
         } else if check_if_last_name(name, data_type) {
-            retval_str = NAME_LAST_NAME;
+            return Some(String::from(NAME_LAST_NAME));
         } else if check_if_name(name, data_type) {
-            retval_str = NAME_NAME;
+            return Some(String::from(NAME_NAME));
         } else {
-            retval_str = LOREM_WORD;
+            return Some(String::from(LOREM_WORD));
         }
     }
     // number
     match get_numeric_type(data_type) {
         Some(numeric_type) => {
             if numeric_type.is_floating {
-                retval_str = NUMBER_FLOAT;
+                return Some(String::from(NUMBER_FLOAT));
             } else {
-                retval_str = NUMBER_INTEGER;
+                return Some(String::from(NUMBER_INTEGER));
             }
         }
         _ => {}
     }
     // date
     if let Some(date_type) = get_date_type(data_type) {
-        retval_str = date_type;
+        return Some(String::from(date_type));
     }
 
-    if retval_str.is_empty() {
-        return None;
-    } else {
-        return Some(String::from(retval_str));
-    }
+    None
 }
 
 fn check_if_id(is_primary_key: bool) -> bool {

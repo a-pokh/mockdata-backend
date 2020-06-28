@@ -129,28 +129,36 @@ pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, 
 
     let mut project_tables = Vec::new();
     let mut project_table_fields = Vec::new();
-    for table in database_parsed_ddl.unwrap() {
+    for table in &database_parsed_ddl.unwrap() {
         let table_id = Uuid::new_v4().to_string();
 
         project_tables.push(ProjectTable {
             id: table_id.clone(),
             project_id: project_id.clone(),
-            name: table.name,
-            schema: table.schema,
+            name: table.name.clone(),
+            schema: table.schema.clone(),
             // this is default value in DB, not sure how to skip its insertion
             generate_data_count: 100,
         });
 
-        for field in table.fields {
-            let fake_data_type = fakedata::get_data_type_by_name(&field.name, &field.data_type);
-            let enum_values = field.enum_values.map(|e| e.join(","));
+        for field in &table.fields {
+            let enum_values = field.enum_values.as_ref().map(|e| e.join(","));
+            let fake_data_type = fakedata::get_data_type_by_name(
+                &field.name,
+                &field.data_type,
+                *&field.is_primary_key,
+                *&table.has_composite_primary_key(),
+                *&field.reference_table.is_some(),
+                enum_values.is_some(),
+                *&field.is_unique,
+            );
 
             project_table_fields.push(ProjectTableField {
                 id: Uuid::new_v4().to_string(),
                 project_table_id: table_id.clone(),
-                name: field.name,
-                data_type: field.data_type,
-                reference_table: field.reference_table,
+                name: field.name.clone(),
+                data_type: field.data_type.clone(),
+                reference_table: field.reference_table.clone(),
                 is_not_null: field.is_not_null,
                 is_primary_key: field.is_primary_key,
                 is_unique: field.is_unique,

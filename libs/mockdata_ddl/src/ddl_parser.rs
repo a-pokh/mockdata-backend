@@ -24,6 +24,13 @@ pub struct Table {
     pub schema: String,
     pub fields: Vec<Field>,
 }
+impl Table {
+    pub fn has_composite_primary_key(&self) -> bool {
+        let count = &self.fields.iter().filter(|f| f.is_primary_key).count();
+
+        return *count > 1 as usize;
+    }
+}
 
 pub fn parse(
     database_definitions: String,
