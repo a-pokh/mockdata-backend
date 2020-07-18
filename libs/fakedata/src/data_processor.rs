@@ -169,8 +169,8 @@ fn get_date_type(data_type: &str) -> Option<&str> {
 
 fn get_text_type(data_type: &str) -> Option<TextType> {
     // compile outside loop
-    let varchar_regex = Regex::new(r"varchar\((\d+)\)|character varying\((\d+)\)").unwrap();
-    let char_regex = Regex::new(r"char\((\d+)\)|character\((\d+)\)").unwrap();
+    let varchar_regex = Regex::new(r"(?i)varchar\((\d+)\)|character varying\((\d+)\)").unwrap();
+    let char_regex = Regex::new(r"(?i)char\((\d+)\)|character\((\d+)\)").unwrap();
 
     let varchar_match = varchar_regex.captures(data_type);
     let char_match = char_regex.captures(data_type);
@@ -221,7 +221,7 @@ fn get_numeric_type(data_type: &str) -> Option<NumericType> {
     let int_types_vector = vec![
         "smallint", "int2", "integer", "int", "int4", "int8", "bigint",
     ];
-    let float_types_vector = vec!["real", "float4", "double precision", "float8"];
+    let float_types_vector = vec!["real", "float4", "double precision", "float8", "numeric"];
 
     if int_types_vector
         .iter()
@@ -231,7 +231,7 @@ fn get_numeric_type(data_type: &str) -> Option<NumericType> {
     }
 
     let float_var_regex =
-        Regex::new(r"decimal\((\d+, ?\d+)\)|numeric\((\d+,?\d+)\)|numeric").unwrap();
+        Regex::new(r"(?i)decimal\((\d+, ?\d+)\)|numeric\((\d+,?\d+)\)|numeric").unwrap();
     if float_types_vector
         .iter()
         .any(|&i| i == data_type.to_lowercase())
