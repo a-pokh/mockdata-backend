@@ -174,7 +174,7 @@ fn get_text_type(data_type: &str) -> Option<TextType> {
 
     let varchar_match = varchar_regex.captures(data_type);
     let char_match = char_regex.captures(data_type);
-    if data_type.to_lowercase() == "text" {
+    if data_type.to_lowercase() == "text" || data_type.to_lowercase() == "citext" {
         return Some(TextType {
             length: None,
             varying: true,
@@ -216,6 +216,7 @@ fn get_text_type(data_type: &str) -> Option<TextType> {
     None
 }
 
+// TODO: numeric(n,0) is not float!!
 fn get_numeric_type(data_type: &str) -> Option<NumericType> {
     let int_types_vector = vec![
         "smallint", "int2", "integer", "int", "int4", "int8", "bigint",
@@ -229,7 +230,8 @@ fn get_numeric_type(data_type: &str) -> Option<NumericType> {
         return Some(NumericType { is_floating: false });
     }
 
-    let float_var_regex = Regex::new(r"decimal\((\d+, ?\d+)\)|numeric\((\d+, ?\d+)\)").unwrap();
+    let float_var_regex =
+        Regex::new(r"decimal\((\d+, ?\d+)\)|numeric\((\d+,?\d+)\)|numeric").unwrap();
     if float_types_vector
         .iter()
         .any(|&i| i == data_type.to_lowercase())
