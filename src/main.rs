@@ -39,7 +39,8 @@ async fn main() {
 
     let cors = warp::cors()
         .allow_any_origin()
-        .allow_methods(vec!["GET", "POST", "PUT", "DELETE"]);
+        .allow_methods(vec!["GET", "POST", "PUT", "DELETE"])
+        .allow_header("content-type");
 
     let api = filters::project::project_filters();
 

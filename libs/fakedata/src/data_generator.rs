@@ -1,20 +1,17 @@
-use anyhow::Result;
+use crate::constants::*;
 use fake::faker::lorem::en::*;
-use fake::faker::number::raw::*;
+use fake::faker::name::raw::*;
 use fake::locales::*;
-use fake::locales::{EN, ZH_TW};
-use fake::{Dummy, Fake, Faker};
-use rand::rngs::StdRng;
-use rand::SeedableRng;
+use uuid::Uuid;
 
-pub struct Table {
+pub struct GeneratorTable {
     pub name: String,
     pub schema: String,
     pub count: u32,
-    pub fields: Vec<Field>,
+    pub fields: Vec<GeneratorField>,
 }
 
-pub struct Field {
+pub struct GeneratorField {
     pub name: String,
     pub data_type: Option<String>,
     pub reference_table: Option<String>,
@@ -24,17 +21,53 @@ pub struct Field {
     pub enum_values: Option<Vec<String>>,
 }
 
-pub fn generate() -> Vec<String> {
-    let mut result = Vec::new();
-    let seed = [
-        1, 0, 0, 0, 23, 0, 0, 0, 200, 1, 0, 0, 210, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0,
-    ];
-    let ref mut rng = StdRng::from_seed(seed);
-    for _ in 0..1000 {
-        let v: String = Word().fake_with_rng::<String, StdRng>(rng);
-        result.push(v);
+struct FieldResult {
+    name: String,
+    values: Vec<String>,
+}
+
+pub fn generate(tables: Vec<GeneratorTable>) -> Vec<String> {
+    let mut script_strings: Vec<String> = Vec::new();
+    for table in tables {
+        let mut generated_table_data: Vec<FieldResult> = Vec::new();
+        let mut column_names = String::new();
+
+        for field in table.fields {
+            generated_table_data.push(FieldResult {
+                name: field.name.clone(),
+                values: generate_stub(&field, table.count),
+            });
+        }
+
+        for n in 0..table.count {
+            let mut columns: Vec<String> = Vec::new();
+            let mut values: Vec<String> = Vec::new();
+            for table_item in &generated_table_data {
+                let value = &table_item.values[n as usize];
+                columns.push(table_item.name.clone());
+                values.push(value.clone());
+            }
+            script_strings.push(format!(
+                r#"insert into ({}) {}"#,
+                columns.join(", "),
+                values.join(", ")
+            ));
+        }
+
+        println!("{:#?}", script_strings);
     }
-    println!("random nested vec {:?}", result);
-    vec![]
+    script_strings
+}
+
+fn generate_stub(field: &GeneratorField, count: u32) -> Vec<String> {
+    match &field.data_type {
+        Some(data_type) => match data_type.as_str() {
+            ID_CUID => {
+                let my_uuid: String = Uuid::new_v4().to_string();
+            }
+            _ => return vec![],
+        },
+        None => return vec![],
+    }
+    fake::vec![String as Name(EN); count as usize]
 }

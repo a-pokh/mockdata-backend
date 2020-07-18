@@ -1,4 +1,5 @@
-mod data_generator;
+mod constants;
+pub mod data_generator;
 mod data_processor;
 
 pub fn get_data_type(
@@ -21,6 +22,6 @@ pub fn get_data_type(
     )
 }
 
-pub fn generate_data() -> Vec<String> {
-    data_generator::generate()
+pub fn generate_data(tables: Vec<data_generator::GeneratorTable>) -> Vec<String> {
+    data_generator::generate(tables)
 }

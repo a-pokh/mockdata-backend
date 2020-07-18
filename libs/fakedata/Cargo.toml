@@ -14,3 +14,5 @@ anyhow = "1.0.31"
 fake = { version = "2.2", features=['chrono']}
 regex = "1"
 rand = "0.7.3"
+cuid = "1.0.0"
+uuid = { version = "0.8", features = ["serde", "v4"] }

@@ -1,30 +1,5 @@
+use crate::constants::*;
 use regex::Regex;
-
-const LOREM_WORDS: &str = "words";
-const LOREM_WORD: &str = "word";
-const NAME_NAME: &str = "name";
-const NAME_FIRST_NAME: &str = "first_name";
-const NAME_LAST_NAME: &str = "last_name";
-const NAME_TITLE: &str = "title";
-const INTERNET_EMAIL: &str = "email";
-const NUMBER_INTEGER: &str = "integer";
-const NUMBER_FLOAT: &str = "float";
-const DATE_DATE: &str = "date";
-const DATE_TIMESTAMP: &str = "timestamp";
-const DATE_TIMESTAMP_WITH_TIMEZONE: &str = "timestamp_with_timezone";
-const DATE_TIME: &str = "time";
-const DATE_TIME_WITH_TIMEZONE: &str = "time_with_timezone";
-const DATE_INTERVAL: &str = "interval";
-const ID_GUID: &str = "guid";
-const ID_UUID: &str = "uuid";
-const ID_SHORT_UUID: &str = "short_uuid";
-const ID_CUID: &str = "cuid";
-const ID_AUTOINCREMENT: &str = "autoincrement";
-const MONEY_MONEY: &str = "money";
-const BOOLEAN_BOOLEAN: &str = "boolean";
-const NETWORK_IPV4: &str = "ipv4";
-const NETWORK_IPV6: &str = "ipv6";
-const NETWORK_MAC: &str = "mac_address";
 
 #[derive(Debug)]
 pub struct FakeDataType {
@@ -87,11 +62,11 @@ pub fn get_data_type(
                         } else if length < 30 {
                             return Some(String::from(ID_CUID));
                         } else {
-                            return Some(String::from(ID_GUID));
+                            return Some(String::from(ID_CUID));
                         }
                     }
                     None => {
-                        return Some(String::from(ID_GUID));
+                        return Some(String::from(ID_CUID));
                     }
                 };
             }

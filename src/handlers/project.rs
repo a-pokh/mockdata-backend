@@ -180,8 +180,59 @@ pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, 
     Ok(StatusCode::OK)
 }
 
-pub async fn generate_project_data(_project_id: String) -> Result<impl warp::Reply, Infallible> {
-    fakedata::generate_data();
+pub async fn generate_project_data(project_id: String) -> Result<impl warp::Reply, Infallible> {
+    use crate::schema::projects::dsl::projects;
+    dotenv().ok();
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let conn = PgConnection::establish(&database_url).unwrap();
+
+    let project = projects
+        .find(project_id)
+        .get_result::<Project>(&conn)
+        .expect("Error saving new project");
+    let project_tables = ProjectTable::belonging_to(&project)
+        .load::<ProjectTable>(&conn)
+        .expect("Error saving new project");
+    let project_table_fields = ProjectTableField::belonging_to(&project_tables)
+        .load::<ProjectTableField>(&conn)
+        .expect("Error saving new project");
+
+    let grouped_fields: Vec<Vec<ProjectTableField>> =
+        project_table_fields.grouped_by(&project_tables);
+    let tables_and_fields: Vec<(ProjectTable, Vec<ProjectTableField>)> =
+        project_tables.into_iter().zip(grouped_fields).collect();
+
+    let mut result = Vec::new();
+    for table_and_fields in tables_and_fields {
+        let (project_table, fields) = table_and_fields;
+
+        let fields: Vec<fakedata::data_generator::GeneratorField> = fields
+            .into_iter()
+            .map(|f| fakedata::data_generator::GeneratorField {
+                name: f.name.clone(),
+                data_type: f.fake_data_type.clone(),
+                reference_table: f.reference_table.clone(),
+                is_not_null: f.is_not_null.clone(),
+                is_primary_key: f.is_primary_key.clone(),
+                is_unique: f.is_unique.clone(),
+                enum_values: match f.enum_values {
+                    Some(values) => Some(values.split(",").map(|s| String::from(s)).collect()),
+                    None => None,
+                },
+            })
+            .collect();
+
+        let table = fakedata::data_generator::GeneratorTable {
+            name: project_table.name.clone(),
+            schema: project_table.schema.clone(),
+            fields,
+            count: project_table.generate_data_count as u32,
+        };
+
+        result.push(table);
+    }
+
+    fakedata::generate_data(result);
 
     Ok(StatusCode::OK)
 }
