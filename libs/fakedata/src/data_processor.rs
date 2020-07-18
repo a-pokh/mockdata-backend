@@ -222,12 +222,19 @@ fn get_numeric_type(data_type: &str) -> Option<NumericType> {
     ];
     let float_types_vector = vec!["real", "float4", "double precision", "float8"];
 
-    if int_types_vector.iter().any(|&i| i == data_type) {
+    if int_types_vector
+        .iter()
+        .any(|&i| i == data_type.to_lowercase())
+    {
         return Some(NumericType { is_floating: false });
     }
 
     let float_var_regex = Regex::new(r"decimal\((\d+, ?\d+)\)|numeric\((\d+, ?\d+)\)").unwrap();
-    if float_types_vector.iter().any(|&i| i == data_type) || float_var_regex.is_match(data_type) {
+    if float_types_vector
+        .iter()
+        .any(|&i| i == data_type.to_lowercase())
+        || float_var_regex.is_match(data_type)
+    {
         return Some(NumericType { is_floating: true });
     }
 
