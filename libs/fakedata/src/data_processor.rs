@@ -174,7 +174,11 @@ fn get_text_type(data_type: &str) -> Option<TextType> {
 
     let varchar_match = varchar_regex.captures(data_type);
     let char_match = char_regex.captures(data_type);
-    if data_type.to_lowercase() == "text" || data_type.to_lowercase() == "citext" {
+    if data_type.to_lowercase() == "text"
+        || data_type.to_lowercase() == "citext"
+        || data_type.to_lowercase() == "varchar"
+        || data_type.to_lowercase() == "character varying"
+    {
         return Some(TextType {
             length: None,
             varying: true,
