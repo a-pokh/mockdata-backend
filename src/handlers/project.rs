@@ -138,7 +138,7 @@ pub async fn introspect_project(project_id: String) -> Result<impl warp::Reply, 
             name: table.name.clone(),
             schema: table.schema.clone(),
             // this is default value in DB, not sure how to skip its insertion
-            generate_data_count: 100,
+            generate_data_count: 10,
         });
 
         for field in &table.fields {
@@ -232,9 +232,9 @@ pub async fn generate_project_data(project_id: String) -> Result<impl warp::Repl
         result.push(table);
     }
 
-    fakedata::generate_data(result);
+    let generated = fakedata::generate_data(result);
 
-    Ok(StatusCode::OK)
+    Ok(warp::reply::json(&generated))
 }
 
 pub async fn create_project(create: NewProject) -> Result<impl warp::Reply, Infallible> {

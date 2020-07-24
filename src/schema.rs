@@ -29,7 +29,7 @@ table! {
     project_tables (id) {
         id -> Text,
         name -> Varchar,
-        schema -> Varchar,
+        schema -> Nullable<Varchar>,
         project_id -> Text,
         generate_data_count -> Int4,
     }

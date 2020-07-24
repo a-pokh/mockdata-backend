@@ -29,7 +29,7 @@ pub struct NewProject {
 pub struct ProjectTable {
     pub id: String,
     pub name: String,
-    pub schema: String,
+    pub schema: Option<String>,
     pub project_id: String,
     pub generate_data_count: i32,
 }
@@ -66,7 +66,7 @@ pub struct ProjectTableFieldView {
 pub struct ProjectTableView {
     pub id: String,
     pub name: String,
-    pub schema: String,
+    pub schema: Option<String>,
     pub fields: Vec<ProjectTableFieldView>,
     pub generate_data_count: i32,
 }

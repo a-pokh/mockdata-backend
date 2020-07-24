@@ -21,7 +21,7 @@ pub struct Field {
 #[derive(Debug)]
 pub struct Table {
     pub name: String,
-    pub schema: String,
+    pub schema: Option<String>,
     pub fields: Vec<Field>,
 }
 impl Table {
@@ -50,6 +50,7 @@ pub fn parse(
                 constraints,
                 ..
             } => {
+                println!("{:?}", name);
                 let mut fields = Vec::new();
                 for column in columns {
                     let reference_table: Option<String>;
@@ -133,10 +134,14 @@ pub fn parse(
 
                     fields.push(field);
                 }
+                // name contains schema.name
+                let string_name = name.to_string();
+                let mut split = string_name.split(".");
+                let schema_and_name = split.collect::<Vec<&str>>();
 
                 let table = Table {
-                    name: name.to_string(),
-                    schema: name.to_string(),
+                    name: schema_and_name[1].to_string(),
+                    schema: Some(schema_and_name[0].to_string()),
                     fields,
                 };
 
